@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stone_paper_scissors/Screens/game_screen.dart';
 import 'package:stone_paper_scissors/constants.dart';
 import 'package:stone_paper_scissors/widgets/custom_button.dart';
 import 'package:stone_paper_scissors/widgets/custom_text.dart';
@@ -33,6 +34,10 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
     connect();
   }
 
+  void joinRoom(BuildContext context) {
+    Navigator.pushNamed(context, GameScreen.routeName);
+  }
+
   // Aware !! Sockets below ;)
   void connect() {
     print("entered in connect");
@@ -44,7 +49,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
     socket.onConnect((_) {
       print('Connected to socket server');
     });
-    
+
     // catching roomID
     socket.on('roomCreated', (data) {
       setState(() {
@@ -56,8 +61,9 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
 
   void createGame(String name) {
     if (name.isNotEmpty) {
-      socket.emit('createGame', name); 
+      socket.emit('createGame', name);
       print('Creating game for: $name');
+      joinRoom(context);
     } else {
       print('Nickname is required');
     }
