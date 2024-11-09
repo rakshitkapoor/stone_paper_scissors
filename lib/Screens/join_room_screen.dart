@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:stone_paper_scissors/Screens/game_screen.dart';
 import 'package:stone_paper_scissors/constants.dart';
 import 'package:stone_paper_scissors/widgets/custom_button.dart';
 import 'package:stone_paper_scissors/widgets/custom_text.dart';
@@ -18,13 +19,13 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
   TextEditingController _gameId = TextEditingController();
   late IO.Socket _socket;
   String _errorMessage="";
+  dynamic players;
+  String roomId="";
+  String player1="";
+  String player2="";
+  
 
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    _socket.disconnect();
-    super.dispose();
-  }
+
 
   @override
   void initState() {
@@ -47,6 +48,10 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
     _socket.on('playerJoined', (data) {
       print('Player joined room: $data');
       setState(() {
+        players=data['players'];
+        player1=players[0]['nickname'];
+        player2=players[1]['nickname'];
+        roomId=data['roomId'];
         _errorMessage="";
       });
     });
@@ -61,10 +66,13 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
   void _joinGame() {
     final String name = _nameController.text.trim();
     final String gameId = _gameId.text.trim();
+    // print("Player1: ${players[0]['nickname']}");
+    // print("Player2: ${players[1]['nickname']}");
 
     if (name.isNotEmpty && gameId.isNotEmpty) {
       _socket.emit('joinGame', {'roomId': gameId, 'nickname': name});
       // Navigate to the game screen or waiting room
+      Navigator.push(context, MaterialPageRoute(builder: (context) => GameScreen(roomId: roomId, player1: player1, player2: player2),));
     } else {
       setState(() {
         _errorMessage = 'Please fill in both the nickname and game ID.';

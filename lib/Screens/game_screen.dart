@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:stone_paper_scissors/constants.dart';
 import 'package:stone_paper_scissors/widgets/custom_text.dart';
 import 'package:stone_paper_scissors/widgets/player_avatar.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class GameScreen extends StatefulWidget {
   static String routeName = '/game-room';
-   GameScreen({super.key,required this.roomId,required this.name});
-   final String roomId;
-   final String name;
+  const GameScreen(
+      {super.key,
+      required this.roomId,
+      required this.player1,
+      required this.player2});
+  final String roomId;
+  final String player1;
+  final String player2;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -15,26 +21,51 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   String? _selectedButton;
+  late IO.Socket _socket;
+  int score1 = 0;
+  int score2 = 0;
+
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _connectToSocket();
+  }
+
+  void _connectToSocket() {
+    _socket = IO.io(url, <String, dynamic>{
+      'transports': ['websocket'],
+      'autoConnect': false,
+    });
+
+    _socket.connect();
+    _socket.onConnect((_) {
+      print('Connected to socket server id: ${_socket.id}');
+    });
+    
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-        title: Text("Room Code: MOB-jBk"),
+        title: Text("Room Code: ${widget.roomId}"),
         backgroundColor: bg,
       ),
       body: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(
+          Padding(
+            padding: const EdgeInsets.symmetric(
               vertical: 16.0,
               horizontal: 20,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                PlayerAvatar(name: "Rakshit", backgroundColor: Colors.blue),
-                PlayerAvatar(name: "Swati", backgroundColor: Colors.green),
+                PlayerAvatar(
+                    name: "${widget.player1}", backgroundColor: Colors.blue),
+                PlayerAvatar(
+                    name: "${widget.player2}", backgroundColor: Colors.green),
               ],
             ),
           ),
@@ -46,7 +77,7 @@ class _GameScreenState extends State<GameScreen> {
             children: [
               CustomText(
                 shadows: const [Shadow(color: Colors.blue, blurRadius: 40)],
-                text: "5",
+                text: "${score1}",
                 fontSize: screenSize.height * 0.1,
               ),
               CustomText(
@@ -56,7 +87,7 @@ class _GameScreenState extends State<GameScreen> {
               ),
               CustomText(
                 shadows: const [Shadow(color: Colors.green, blurRadius: 40)],
-                text: "5",
+                text: "$score2",
                 fontSize: screenSize.height * 0.1,
               )
             ],
