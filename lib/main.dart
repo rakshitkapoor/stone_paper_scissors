@@ -4,8 +4,10 @@ import 'package:stone_paper_scissors/Screens/game_screen.dart';
 import 'package:stone_paper_scissors/Screens/join_room_screen.dart';
 import 'package:stone_paper_scissors/constants.dart';
 import 'package:stone_paper_scissors/Screens/homepage.dart';
+import 'package:stone_paper_scissors/socket_manager.dart';
 
 void main() {
+  SocketManager().connect;
   runApp(const MyApp());
 }
 

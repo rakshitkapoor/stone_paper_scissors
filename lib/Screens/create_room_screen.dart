@@ -4,7 +4,7 @@ import 'package:stone_paper_scissors/constants.dart';
 import 'package:stone_paper_scissors/widgets/custom_button.dart';
 import 'package:stone_paper_scissors/widgets/custom_text.dart';
 import 'package:stone_paper_scissors/widgets/custom_textfield.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:stone_paper_scissors/socket_manager.dart';
 
 class CreateRoomScreen extends StatefulWidget {
   static String routeName = '/create-room';
@@ -16,53 +16,23 @@ class CreateRoomScreen extends StatefulWidget {
 
 class _CreateRoomScreenState extends State<CreateRoomScreen> {
   final TextEditingController _nameController = TextEditingController();
-  late IO.Socket socket;
   String? roomId;
 
   @override
-  void dispose() {
-    // TODO: implement dispose
-    super.dispose();
-    _nameController.dispose();
-    socket.disconnect();
-  }
-
-  @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    connect();
+    SocketManager().connect();
   }
 
   void joinRoom(BuildContext context) {
     Navigator.pushNamed(context, GameScreen.routeName);
   }
 
-  // Aware !! Sockets below ;)
-  void connect() {
-    print("entered in connect");
-    socket = IO.io(url, <String, dynamic>{
-      "transports": ["websocket"],
-      "autoConnect": false,
-    });
-    socket.connect();
-    socket.onConnect((_) {
-      print('Connected to socket server');
-    });
-
-    // catching roomID
-    socket.on('roomCreated', (data) {
-      setState(() {
-        roomId = data;
-      });
-      print("Room Created with room id: $roomId");
-    });
-  }
+ 
 
   void createGame(String name) {
     if (name.isNotEmpty) {
-      socket.emit('createGame', name);
-      print('Creating game for: $name');
+      SocketManager().emit('createGame', name);
       joinRoom(context);
     } else {
       print('Nickname is required');

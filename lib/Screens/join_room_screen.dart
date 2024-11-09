@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:stone_paper_scissors/Screens/game_screen.dart';
 import 'package:stone_paper_scissors/constants.dart';
 import 'package:stone_paper_scissors/widgets/custom_button.dart';
 import 'package:stone_paper_scissors/widgets/custom_text.dart';
 import 'package:stone_paper_scissors/widgets/custom_textfield.dart';
+import 'package:stone_paper_scissors/socket_manager.dart';
+import 'package:stone_paper_scissors/Screens/game_screen.dart';
 
 class JoinRoomScreen extends StatefulWidget {
   static String routeName = '/join-room';
@@ -17,62 +17,54 @@ class JoinRoomScreen extends StatefulWidget {
 class _JoinRoomScreenState extends State<JoinRoomScreen> {
   TextEditingController _nameController = TextEditingController();
   TextEditingController _gameId = TextEditingController();
-  late IO.Socket _socket;
   String _errorMessage="";
   dynamic players;
   String roomId="";
   String player1="";
   String player2="";
-  
-
-
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _connectToSocket();
   }
 
-  void _connectToSocket() {
-    _socket = IO.io(url, <String, dynamic>{
-      'transports': ['websocket'],
-      'autoConnect': false,
+void _connectToSocket() {
+  SocketManager().connect();
+  SocketManager().on('playerJoined', (data) {
+    print('Player joined room: $data');
+    setState(() {
+      players = data['players'];
+      player1 = players[0]['nickname'];
+      player2 = players[1]['nickname'];
+      roomId = data['roomId'];
+      _errorMessage = "";
     });
 
-    _socket.connect();
-    _socket.onConnect((_) {
-      print('Connected to socket server');
-    });
+    // Navigate to the game screen or waiting room after updating the state
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GameScreen(roomId: roomId, player1: player1, player2: player2),
+      ),
+    );
+  });
 
-    _socket.on('playerJoined', (data) {
-      print('Player joined room: $data');
-      setState(() {
-        players=data['players'];
-        player1=players[0]['nickname'];
-        player2=players[1]['nickname'];
-        roomId=data['roomId'];
-        _errorMessage="";
-      });
+  SocketManager().on('error', (error) {
+    setState(() {
+      _errorMessage = error.toString();
     });
-
-    _socket.on('error', (error) {
-      setState(() {
-        _errorMessage = error.toString();
-      });
-    });
-  }
+  });
+}
 
   void _joinGame() {
     final String name = _nameController.text.trim();
     final String gameId = _gameId.text.trim();
-    // print("Player1: ${players[0]['nickname']}");
-    // print("Player2: ${players[1]['nickname']}");
 
     if (name.isNotEmpty && gameId.isNotEmpty) {
-      _socket.emit('joinGame', {'roomId': gameId, 'nickname': name});
-      // Navigate to the game screen or waiting room
-      Navigator.push(context, MaterialPageRoute(builder: (context) => GameScreen(roomId: roomId, player1: player1, player2: player2),));
+      SocketManager().emit('joinGame', {'roomId': gameId, 'nickname': name});
+      print("player1: $player1");
+      print("player2: $player2");
     } else {
       setState(() {
         _errorMessage = 'Please fill in both the nickname and game ID.';

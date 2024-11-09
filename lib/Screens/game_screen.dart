@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stone_paper_scissors/constants.dart';
 import 'package:stone_paper_scissors/widgets/custom_text.dart';
 import 'package:stone_paper_scissors/widgets/player_avatar.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:stone_paper_scissors/socket_manager.dart';
 
 class GameScreen extends StatefulWidget {
   static String routeName = '/game-room';
@@ -21,31 +21,36 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   String? _selectedButton;
-  late IO.Socket _socket;
   int score1 = 0;
   int score2 = 0;
 
+  int _playerScore = 0;
+  int _opponentScore = 0;
+  String _winner = '';
+
+  @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    _connectToSocket();
+    SocketManager().on('move', _handleMove);
+    SocketManager().on('winner', _handleWinner);
+    print(widget.player1);
   }
 
-  void _connectToSocket() {
-    _socket = IO.io(url, <String, dynamic>{
-      'transports': ['websocket'],
-      'autoConnect': false,
+  void _handleMove(dynamic data) {
+    setState(() {
+      // Update the game state based on the move data
     });
+  }
 
-    _socket.connect();
-    _socket.onConnect((_) {
-      print('Connected to socket server id: ${_socket.id}');
+  void _handleWinner(dynamic data) {
+    setState(() {
+      _winner = data['winner'];
     });
-    
   }
 
   @override
   Widget build(BuildContext context) {
+    print("Socket ID :${SocketManager().getId()}");
     final screenSize = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(

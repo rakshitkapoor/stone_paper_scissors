@@ -22,7 +22,7 @@ class HomePage extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(
           backgroundColor: bg,
-          title: const Text("Tick-Tac-Toe"),
+          title: const Text("Stone-Paper-Scissor"),
         ),
         body: Padding(
           padding: EdgeInsets.all(size.width*0.1),
